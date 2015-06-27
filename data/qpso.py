@@ -175,7 +175,7 @@ def inti_population(pos_,cycleCount_,gen_,size_,local_,global_,goalfunc_,res_,Qn
             res_[igen].append([])
     for item in range(size_):
         local_.append([])
-        pos_[0][item].append(np.random.randint(0,300))
+        pos_[0][item].append(np.random.randint(0,100))
         pos_[0][item].append(np.random.randint(0,300))
     for item in range(size_):
         powerNetGene(Pnet,pos_[0][item])
@@ -243,15 +243,16 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
         beta=get_beta_particle(1)
         L.append(2*beta*abs(Pi[0]-pos_[curgen_-1][item][0]))
         L.append(2*beta*abs(Pi[1]-pos_[curgen_-1][item][1]))
-        # to comfirm pos >0
+        # to comfirm pos  >0
+        # pos_[x1,x2]  x1,x2 can not below 1
         temp=Pd[0]+0.5*L[0]*math.log(abs(1/u.rvs(size=1)),math.e)
-        if temp>0:
+        if temp>0.98:
             pos_[curgen_][item].append(temp)
         else:
             pos_[curgen_][item].append(pos_[curgen_-1][item][0])
             
         temp=Pd[1]+0.5*L[1]*math.log(abs(1/u.rvs(size=1)),math.e)
-        if temp>0:
+        if temp>1.0:
             pos_[curgen_][item].append(temp)
         else:
             pos_[curgen_][item].append(pos_[curgen_-1][item][1])       
@@ -263,6 +264,7 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
         energyNetGene(Qnet,Pnet)
         rlist.append(goalfunc_(pos_[curgen_][item],cycleCounts_[curgen_][item],Qnet,Pnet))
     index=rlist.index(min(rlist))
+    #record the fitness value of new pos  
     for item in range(len(pos_[curgen_])):
         res_[curgen_][item].append(rlist[item])
     print 'min value index: %d'%index
@@ -292,23 +294,36 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
         global_[curgen_]=local_[gb_index]
     else:
         global_[curgen_]=global_[curgen_-1]
+        
 
-   
-   #for item in range(pos_.size())
+
+        #chaos the racer
+    z1=[]
+    z2=[]
+    print '------------------------------------------'
+    if curgen_==1:
+        print '---------------------------------------'
+        print 'chao start'
+        print '---------------------------------------'
+        for i in range(len(local_)):
+            z1.append((temp_values[gb_index]-temp_values[i])/temp_values[gb_index])
+            z2.append(1-z1[i])
+            local_[i][0]=local_[i][0]*z1[i]+local_[i][1]*z2[i]
+            local_[i][1]=local_[i][1]*z2[i]+local_[i][1]*z1[i]
+    print z1
+
+
+        
+    
 
 global_best_record=[0,0]
 
-inti_population(xPOS,cycle_counts,20,50,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
+inti_population(xPOS,cycle_counts,100,200,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
 while True:    
-    for genitem in range(1,20):
+    for genitem in range(1,100):
         update_population(xPOS,cycle_counts,genitem,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
         global_best_record[0]=xPOS_global_best[10-1]
-    for genitem in range(1,20):
-        update_population(xPOS,cycle_counts,genitem,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
-        global_best_record[1]=xPOS_global_best[10-1]
-    if (global_best_record[0]-global_best_record[1] )/global_best_record[0]<0.01:
-        print 'success'
-        break
+    
 
 
 
