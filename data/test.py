@@ -7,5 +7,7 @@ from scipy import stats
 
 
 #my QPSO  Algorithn
-muniform=stats.uniform().rvs(size=1)
-print muniform**(1+1/2)
+ll=[1,2,3,4,5]
+l=[10,20,30,40]
+l.append(ll[0])
+l[4]=100000

@@ -224,11 +224,15 @@ def get_beta_particle(itera_count):
 xPOS=[]  #[T]generate [N]particle size :tn--id[2]dimenssion
 xPOS_local_best=[]  #[N]particle size [2]dimenssion
 xPOS_global_best=[] #[2] dimenssion
-results=[] # goalfunc(pos) to get result:[T][N][1]    
+results=[] # goalfunc(pos) to get result:[T][N][1]  
+temp_counts=[]
+temp_values=[]  
 def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qnet,Pnet,Rnet): 
+    del temp_values[:]    
     L=[]
     rlist=[]
     u=stats.norm
+    chaos_factor=4
     print '----------------'
     print 'gen is %d'%curgen_
     print '----------------'
@@ -277,48 +281,19 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
     for item in range(len(pos_[curgen_])):
         res_[curgen_][item].append(rlist[item])
     print 'min value index: %d'%index
-    #update particle pos , rlist is current result ,temp_value is local best result 
-    temp_counts=[]
-    temp_values=[]
-    print len(pos_[curgen_])
-    for item in range(len(pos_[curgen_])):
-            powerNetGene(Pnet,local_[item])
-            energyNetGene(Qnet,Pnet)
-            temp_values.append(goalfunc_(local_[item],temp_counts,Qnet,Pnet))
-            if temp_values[item]>rlist[item]:
-                print 'the %d had changed'%item
-                print 'local best: %f'%temp_values[item]
-                print 'curent    : %f'%rlist[item]
-                print 'has change local from [%f,%f] to [%f,%f]'%(local_[item][0],local_[item][1],pos_[curgen_][item][0],pos_[curgen_][item][1])
-                local_[item]=pos_[curgen_][item]
-            else:
-                print 'local best: %f'%temp_values[item]
-                print 'curent    : %f'%rlist[item]
-    #update global best ,it is the best in local and histoty:
-      #update global pos
     
-    
-    gb_index=temp_values.index(min(temp_values))
-    temp=temp_values[gb_index]
-    if temp<goalfunc_(global_[curgen_-1],temp_counts,Qnet,Pnet):
-        temp=local_[gb_index]
-        global_[curgen_]=temp
-    else:
-        temp=global_[curgen_-1]
-        global_[curgen_]=temp
-        
-      #chaos the racer
+          #chaos the racer
     z1=[]
     z2=[]
     z1_temp=0
     len_temp=0
     lenlist=[]
     for item in range(len(local_)):
-        len_temp=((local_[item][0]-global_[curgen_][0])**2+(local_[item][1]-global_[curgen_][1])**2)
+        len_temp=((local_[item][0]-global_[curgen_-1][0])**2+(local_[item][1]-global_[curgen_-1][1])**2)
         lenlist.append(len_temp)
     #print lenlist
     print '------------------------------------------'
-    if curgen_%10==0:
+    if curgen_%10==chaos_factor:
         print '---------------------------------------'
         print 'chao start'
         print '---------------------------------------'
@@ -331,16 +306,47 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
             local_[i][1]=local_[i][1]*z2[i]+local_[i][1]*z1[i]
         print global_[curgen_-1]
     print z1
+    
+    #update particle pos , rlist is current result ,temp_value is local best result 
+
+    if curgen_%10!=chaos_factor:
+        for item in range(len(pos_[curgen_])):
+                powerNetGene(Pnet,local_[item])
+                energyNetGene(Qnet,Pnet)
+                temp_values.append(goalfunc_(local_[item],temp_counts,Qnet,Pnet))
+                if temp_values[item]>rlist[item]:
+                    print 'the %d had changed'%item
+                    print 'local best: %f'%temp_values[item]
+                    print 'curent    : %f'%rlist[item]
+                    print 'has change local from [%f,%f] to [%f,%f]'%(local_[item][0],local_[item][1],pos_[curgen_][item][0],pos_[curgen_][item][1])
+                    local_[item]=pos_[curgen_][item]
+                else:
+                    print 'local best: %f'%temp_values[item]
+                    print 'curent    : %f'%rlist[item]
+                    
+    #update global best ,it is the best in local and histoty:
+      #update global pos
+
+    gb_index=temp_values.index(min(temp_values))
+    temp=temp_values[gb_index]
+    if temp<goalfunc_(global_[curgen_-1],temp_counts,Qnet,Pnet) and abs(round(temp)-temp)<0.2:
+        temp=local_[gb_index]
+        global_[curgen_]=temp
+    else:
+        temp=global_[curgen_-1]
+        global_[curgen_]=temp
+        
+
 
   
 
 global_best_record=[0,0]
 GEN_MAX=100
-inti_population(xPOS,cycle_counts,GEN_MAX,200,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
+inti_population(xPOS,cycle_counts,GEN_MAX,100,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
 while True:    
-    for genitem in range(1,GEN_MAX):
+    for genitem in range(1,GEN_MAX+1):
         update_population(xPOS,cycle_counts,genitem,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
-        global_best_record[0]=xPOS_global_best[GEN_MAX-1]
+        global_best_record[0]=xPOS_global_best[genitem]
     
 
 
