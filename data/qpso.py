@@ -282,6 +282,7 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
         res_[curgen_][item].append(rlist[item])
     print 'min value index: %d'%index
     
+   
           #chaos the racer
     z1=[]
     z2=[]
@@ -306,9 +307,13 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
             local_[i][1]=local_[i][1]*z2[i]+local_[i][1]*z1[i]
         print global_[curgen_-1]
     print z1
-    
+    #calculate local fitness: whatever  chaos to update global or not chaos to update new local
+    for item in range(len(pos_[curgen_])):
+        powerNetGene(Pnet,local_[item])
+        energyNetGene(Qnet,Pnet)
+        temp_values.append(goalfunc_(local_[item],temp_counts,Qnet,Pnet))
     #update particle pos , rlist is current result ,temp_value is local best result 
-
+    
     if curgen_%10!=chaos_factor:
         for item in range(len(pos_[curgen_])):
                 powerNetGene(Pnet,local_[item])
