@@ -334,7 +334,7 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
 
     gb_index=temp_values.index(min(temp_values))
     temp=temp_values[gb_index]
-    if temp<goalfunc_(global_[curgen_-1],temp_counts,Qnet,Pnet) and abs(round(temp)-temp)<0.2:
+    if temp<goalfunc_(global_[curgen_-1],temp_counts,Qnet,Pnet):
         temp=local_[gb_index]
         global_[curgen_]=temp
     else:
