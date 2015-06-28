@@ -160,8 +160,6 @@ xPOS=[]  #[T]generate [N]particle size :tn--id[2]dimenssion
 xPOS_local_best=[]  #[N]particle size [2]dimenssion
 xPOS_global_best=[] #[T][2] dimenssion
 results=[] # goalfunc(pos) to get result:[T][N][1]
-w=0.8  
-r1=0.4
 def inti_population(pos_,cycleCount_,gen_,size_,local_,global_,goalfunc_,res_,Qnet,Pnet,Rnet):
     rlist=[]
     for igen in range(gen_):
@@ -217,7 +215,11 @@ def get_particle_best_ave(local_):
     return mbest
     
 def get_beta_particle(itera_count):
-    return 0.5
+    # x-1 nonlinear reduce  0.5--->0.1
+    if itera_count%10==0:
+        return 0.5
+    else:
+        return 1.0/(itera_count%10+1)
     
 xPOS=[]  #[T]generate [N]particle size :tn--id[2]dimenssion
 xPOS_local_best=[]  #[N]particle size [2]dimenssion
@@ -238,9 +240,16 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
         # !!!!'print' to check the dif  between pos_ and local_ 
         #print 'origin pos:[%f,%f]'%(pos_[curgen_-1][item][0],pos_[curgen_-1][item][1])
         #print 'origin loc:[%f,%f]'%(local_[item][0],local_[item][1])
-        Pd=get_potential_center(local_[item],global_[curgen_-1],0.4)
-  
-        beta=get_beta_particle(1)
+
+        # muniform changing parameter :Pd_r for local from 0.5-->0.33 
+        #                              1-Pd_r for global the Pd going to global best
+       
+        muniform=stats.uniform().rvs(size=1)
+        Pd_r=muniform[0]**(1+curgen_/GEN_MAX)
+        Pd=get_potential_center(local_[item],global_[curgen_-1],Pd_r)
+        print '----Pd_r:%f-------'%Pd_r        
+        
+        beta=get_beta_particle(curgen_)
         L.append(2*beta*abs(Pi[0]-pos_[curgen_-1][item][0]))
         L.append(2*beta*abs(Pi[1]-pos_[curgen_-1][item][1]))
         # to comfirm pos  >0
@@ -288,41 +297,50 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
     #update global best ,it is the best in local and histoty:
       #update global pos
     
+    
     gb_index=temp_values.index(min(temp_values))
     temp=temp_values[gb_index]
     if temp<goalfunc_(global_[curgen_-1],temp_counts,Qnet,Pnet):
-        global_[curgen_]=local_[gb_index]
+        temp=local_[gb_index]
+        global_[curgen_]=temp
     else:
-        global_[curgen_]=global_[curgen_-1]
+        temp=global_[curgen_-1]
+        global_[curgen_]=temp
         
-
-
-        #chaos the racer
+      #chaos the racer
     z1=[]
     z2=[]
+    z1_temp=0
+    len_temp=0
+    lenlist=[]
+    for item in range(len(local_)):
+        len_temp=((local_[item][0]-global_[curgen_][0])**2+(local_[item][1]-global_[curgen_][1])**2)
+        lenlist.append(len_temp)
+    #print lenlist
     print '------------------------------------------'
-    if curgen_==1:
+    if curgen_%10==0:
         print '---------------------------------------'
         print 'chao start'
         print '---------------------------------------'
+        print global_[curgen_-1]
         for i in range(len(local_)):
-            z1.append((temp_values[gb_index]-temp_values[i])/temp_values[gb_index])
-            z2.append(1-z1[i])
+            z1_temp=(max(lenlist)-lenlist[i])/max(lenlist)
+            z1.append(z1_temp)
+            z2.append(1-z1_temp)
             local_[i][0]=local_[i][0]*z1[i]+local_[i][1]*z2[i]
             local_[i][1]=local_[i][1]*z2[i]+local_[i][1]*z1[i]
+        print global_[curgen_-1]
     print z1
 
-
-        
-    
+  
 
 global_best_record=[0,0]
-
-inti_population(xPOS,cycle_counts,100,200,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
+GEN_MAX=100
+inti_population(xPOS,cycle_counts,GEN_MAX,200,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
 while True:    
-    for genitem in range(1,100):
+    for genitem in range(1,GEN_MAX):
         update_population(xPOS,cycle_counts,genitem,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
-        global_best_record[0]=xPOS_global_best[10-1]
+        global_best_record[0]=xPOS_global_best[GEN_MAX-1]
     
 
 

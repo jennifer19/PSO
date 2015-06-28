@@ -91,7 +91,7 @@ def energyNetGene(egy_net,p_net):
 #GOAL FUNC:  
 max_tank_Volumn=[]
 cycle_counts=[] #0123:ele  fc tank |bat
-ren=[3,70]  #01 wind pv
+ren=[2.91,62.25]  #01 wind pv
 #goal=config cost + reset cost + maintain cost + outage cost +risk cost
 def cost_config(pos_,Qnet,Pnet,counts):
     p_wind=pos_[0]*WINDS_PRICE_DEVICE
@@ -149,13 +149,13 @@ def goaltotal(pos_,counts,Qnet,Pnet):
 powerNetGene(power_net,ren)
 powerRenGene(power_ren,ren)
 energyNetGene(energy_net,power_net)  
-#print 'payment install : %f'%cost_config(ren,energy_net,power_net,cycle_counts)
-#print 'tank max volumn : %f'%max_tank_Volumn[0]
-#print 'payment maintain: %f'%cost_maintain(ren,cycle_counts)
-#print 'payment reset   : %f'%cost_reset(ren,cycle_counts)
-#print 'payment risk    : %f'%cost_risk(energy_net)
-#print 'payment outage  : %f'%cost_outage(power_net)
-#print '!!payment total goal: %f'%goaltotal(ren,cycle_counts,energy_net,power_net)
+print 'payment install : %f'%cost_config(ren,energy_net,power_net,cycle_counts)
+print 'tank max volumn : %f'%max_tank_Volumn[0]
+print 'payment maintain: %f'%cost_maintain(ren,cycle_counts)
+print 'payment reset   : %f'%cost_reset(ren,cycle_counts)
+print 'payment risk    : %f'%cost_risk(energy_net)
+print 'payment outage  : %f'%cost_outage(power_net)
+print '!!payment total goal: %f'%goaltotal(ren,cycle_counts,energy_net,power_net)
 
 
 #my QPSO  Algorithn
@@ -246,9 +246,9 @@ def updata_population(pos_,local_,global_,goalfunc_):
    #for item in range(pos_.size()):
         
 
-inti_population(xPOS,10,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
+#inti_population(xPOS,10,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
 
-updata_population(xPOS,xPOS_local_best,xPOS_global_best,goaltotal)
+#updata_population(xPOS,xPOS_local_best,xPOS_global_best,goaltotal)
 print '----'
 print xPOS_local_best
 
