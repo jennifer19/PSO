@@ -91,7 +91,7 @@ def energyNetGene(egy_net,p_net):
 #GOAL FUNC:  
 max_tank_Volumn=[]
 cycle_counts=[] #0123:ele  fc tank |bat
-ren=[2.91,62.25]  #01 wind pv
+ren=[3,61.55]  #01 wind pv
 #goal=config cost + reset cost + maintain cost + outage cost +risk cost
 def cost_config(pos_,Qnet,Pnet,counts):
     p_wind=pos_[0]*WINDS_PRICE_DEVICE
@@ -127,7 +127,7 @@ def cost_config(pos_,Qnet,Pnet,counts):
 def cost_maintain(pos_,counts):
     return pos_[0]*WINDS_PRICE_MAINT+pos_[1]*PV_PRICE_MAINT+counts[0]*ELE_PRICE_MAINT+counts[1]*FC_PRICE_MAINT+counts[2]*TANK_PRICE_MAINT
 def cost_reset(pos_,counts):
-    return counts[2]*FC_PRICE_RESET/FC_LIFESPAN+counts[3]*BAT_PRICE_RESET/BAT_LIFESPAN
+    return counts[1]*FC_PRICE_RESET/FC_LIFESPAN+counts[3]*BAT_PRICE_RESET/BAT_LIFESPAN
 def cost_risk(Qnet):
     count=0
     for item in range(364*24):
@@ -144,6 +144,8 @@ def cost_outage(Pnet):
 def goaltotal(pos_,counts,Qnet,Pnet):
     mcounts=[]
     install=cost_config(pos_,Qnet,Pnet,mcounts)
+    print cost_reset(pos_,mcounts)
+    print mcounts
     return install+cost_maintain(pos_,mcounts)+cost_reset(pos_,mcounts)+cost_risk(Qnet)+cost_outage(Pnet)
 
 powerNetGene(power_net,ren)

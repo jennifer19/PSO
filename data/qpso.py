@@ -173,8 +173,8 @@ def inti_population(pos_,cycleCount_,gen_,size_,local_,global_,goalfunc_,res_,Qn
             res_[igen].append([])
     for item in range(size_):
         local_.append([])
-        pos_[0][item].append(np.random.randint(0,100))
-        pos_[0][item].append(np.random.randint(0,300))
+        pos_[0][item].append(np.random.randint(1,100))
+        pos_[0][item].append(np.random.randint(1,300))
     for item in range(size_):
         powerNetGene(Pnet,pos_[0][item])
         powerRenGene(Rnet,pos_[0][item])
@@ -219,7 +219,8 @@ def get_beta_particle(itera_count):
     if itera_count%10==0:
         return 0.5
     else:
-        return 1.0/(itera_count%10+1)
+        return 0.5
+        #return 1.0/(itera_count%10+1)
     
 xPOS=[]  #[T]generate [N]particle size :tn--id[2]dimenssion
 xPOS_local_best=[]  #[N]particle size [2]dimenssion
@@ -228,18 +229,24 @@ results=[] # goalfunc(pos) to get result:[T][N][1]
 temp_counts=[]
 temp_values=[]  
 def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qnet,Pnet,Rnet): 
-    del temp_values[:]    
+    del temp_values[:]   
+    del temp_counts[:]
     L=[]
     rlist=[]
     u=stats.norm
-    chaos_factor=4
+    chaos_factor=5
     print '----------------'
     print 'gen is %d'%curgen_
     print '----------------'
     Pi=get_particle_best_ave(local_)
     #print 'Pi: (%f,%f)'%(Pi[0],Pi[1])
     # use pd pi to change particle pos
-    for item in range(len(pos_[curgen_-1])): 
+    beta=get_beta_particle(curgen_)
+    muniform=stats.uniform().rvs(size=1)
+    Pd_r=muniform[0]**(1+curgen_/GEN_MAX)
+    print '----Pd_r:%f-------'%Pd_r
+    for item in range(len(local_)):
+        
         del L[:]
         # !!!!'print' to check the dif  between pos_ and local_ 
         #print 'origin pos:[%f,%f]'%(pos_[curgen_-1][item][0],pos_[curgen_-1][item][1])
@@ -247,13 +254,9 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
 
         # muniform changing parameter :Pd_r for local from 0.5-->0.33 
         #                              1-Pd_r for global the Pd going to global best
-       
-        muniform=stats.uniform().rvs(size=1)
-        Pd_r=muniform[0]**(1+curgen_/GEN_MAX)
-        Pd=get_potential_center(local_[item],global_[curgen_-1],Pd_r)
-        print '----Pd_r:%f-------'%Pd_r        
-        
-        beta=get_beta_particle(curgen_)
+
+        Pd=get_potential_center(local_[item],global_[curgen_-1],0.4)
+  
         L.append(2*beta*abs(Pi[0]-pos_[curgen_-1][item][0]))
         L.append(2*beta*abs(Pi[1]-pos_[curgen_-1][item][1]))
         # to comfirm pos  >0
@@ -294,17 +297,18 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
         lenlist.append(len_temp)
     #print lenlist
     print '------------------------------------------'
-    if curgen_%10==chaos_factor:
+    if curgen_%chaos_factor==0:
         print '---------------------------------------'
         print 'chao start'
         print '---------------------------------------'
         print global_[curgen_-1]
         for i in range(len(local_)):
-            z1_temp=(max(lenlist)-lenlist[i])/max(lenlist)
-            z1.append(z1_temp)
-            z2.append(1-z1_temp)
+            #when pos start gathering z1  close to 0.99 z2 to 0.01 
+            z1_temp=(lenlist[i])/max(lenlist)
+            z1.append(1-z1_temp)
+            z2.append(z1_temp)
             local_[i][0]=local_[i][0]*z1[i]+local_[i][1]*z2[i]
-            local_[i][1]=local_[i][1]*z2[i]+local_[i][1]*z1[i]
+            local_[i][1]=local_[i][0]*z2[i]+local_[i][1]*z1[i]
         print global_[curgen_-1]
     print z1
     #calculate local fitness: whatever  chaos to update global or not chaos to update new local
@@ -314,17 +318,14 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
         temp_values.append(goalfunc_(local_[item],temp_counts,Qnet,Pnet))
     #update particle pos , rlist is current result ,temp_value is local best result 
     
-    if curgen_%10!=chaos_factor:
+    if curgen_%chaos_factor!=0:
         for item in range(len(pos_[curgen_])):
-                powerNetGene(Pnet,local_[item])
-                energyNetGene(Qnet,Pnet)
-                temp_values.append(goalfunc_(local_[item],temp_counts,Qnet,Pnet))
                 if temp_values[item]>rlist[item]:
                     print 'the %d had changed'%item
                     print 'local best: %f'%temp_values[item]
                     print 'curent    : %f'%rlist[item]
                     print 'has change local from [%f,%f] to [%f,%f]'%(local_[item][0],local_[item][1],pos_[curgen_][item][0],pos_[curgen_][item][1])
-                    local_[item]=pos_[curgen_][item]
+                    local_[item]=copy.deepcopy(pos_[curgen_][item])
                 else:
                     print 'local best: %f'%temp_values[item]
                     print 'curent    : %f'%rlist[item]
@@ -333,17 +334,14 @@ def update_population(pos_,cycleCounts_,curgen_,local_,global_,goalfunc_,res_,Qn
       #update global pos
 
     gb_index=temp_values.index(min(temp_values))
-    temp=temp_values[gb_index]
+    temp=copy.deepcopy(min(temp_values))
+    powerNetGene(Pnet,global_[curgen_-1])
+    energyNetGene(Qnet,Pnet)
     if temp<goalfunc_(global_[curgen_-1],temp_counts,Qnet,Pnet):
-        temp=local_[gb_index]
-        global_[curgen_]=temp
+        global_[curgen_]=copy.deepcopy(local_[gb_index])
     else:
-        temp=global_[curgen_-1]
-        global_[curgen_]=temp
-        
+        global_[curgen_]=copy.deepcopy(global_[curgen_-1])
 
-
-  
 
 global_best_record=[0,0]
 GEN_MAX=100
@@ -352,7 +350,10 @@ while True:
     for genitem in range(1,GEN_MAX+1):
         update_population(xPOS,cycle_counts,genitem,xPOS_local_best,xPOS_global_best,goaltotal,results,energy_net,power_net,power_ren)
         global_best_record[0]=xPOS_global_best[genitem]
-    
+
+
+
+
 
 
 
