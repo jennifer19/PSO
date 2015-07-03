@@ -91,7 +91,7 @@ def energyNetGene(egy_net,p_net):
 #GOAL FUNC:  
 max_tank_Volumn=[]
 cycle_counts=[] #0123:ele  fc tank |bat
-ren=[3,61.55]  #01 wind pv
+ren=[3,72]  #01 wind pv
 #goal=config cost + reset cost + maintain cost + outage cost +risk cost
 def cost_config(pos_,Qnet,Pnet,counts):
     p_wind=pos_[0]*WINDS_PRICE_DEVICE
